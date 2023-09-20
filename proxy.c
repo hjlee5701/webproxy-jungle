@@ -29,6 +29,7 @@ void do_request(int p_clientfd, char *method, char *path, char *host);
 void do_response(int clientfd, int p_clientfd);
 int parse_uri(char *uri, char *path, char *host, char *port);
 int parse_responsehdrs(rio_t *rp, int length);
+void *thread(void *vargp);
 int main(int argc, char **argv)
 {
   int listenfd, *clientfd;
@@ -51,17 +52,24 @@ int main(int argc, char **argv)
   {
     clientlen = sizeof(clientaddr);
 
-    /* 클라이언트에게서 받은 연결 요청을 accept한다. clientfd = proxy의 connfd*/
-    clientfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
-
-    /* 연결이 성공했다는 메세지를 위해. Getnameinfo를 호출하면서 hostname과 port가 채워진다.*/
-    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-    printf("Accepted connection from (%s, %s)\n", hostname, port);
-
-    do_it(clientfd);
-    Close(clientfd);
+    clientfd = Malloc(sizeof(int));
+    *clientfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+    Pthread_create(&tid, NULL, thread, clientfd);
   }
   return 0;
+}
+void *thread(void *vargp)
+{
+  int connfd = *((int *)vargp);
+  /* 부모 스레드가 기다릴 필요 없이 스레드가 종료 */
+  Pthread_detach(pthread_self());
+
+  /* vargp 포인터가 가리키는 메모리를 해제 */
+  Free(vargp);
+  
+  do_it(connfd);
+  Close(connfd);
+  return NULL;
 }
 /*
 Before Parsing (Client로부터 받은 Request Line)
