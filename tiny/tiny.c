@@ -8,7 +8,7 @@
  */
 #include "csapp.h"
 #include <stdlib.h>
-#define original_staticx
+
 // cgi : common gateway interface
 void doit(int fd);
 void read_requesthdrs(rio_t *rp);
@@ -17,23 +17,6 @@ void serve_static(int fd, char *filename, int filesize, char *method);
 void get_filetread_requesthdrsype(char *filename, char *filetype);
 void serve_dynamic(int fd, char *filename, char *cgiargs, char *method);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
-
-/* doit에서 쓰이는 stat struct */
-// struct stat{
-//   dev_t st_dev; /* ID of device containing file */
-// ino_t st_ino; /* inode number */
-// mode_t st_mode; /* 파일의 종류 및 접근권한 */
-// nlink_t st_nlink; /* hardlink 된 횟수 */
-// uid_t st_uid; /* 파일의 owner */
-// gid_t st_gid; /* group ID of owner */
-// dev_t st_rdev; /* device ID (if special file) */
-// off_t st_size; /* 파일의 크기(bytes) */
-// blksize_t st_blksize; /* blocksize for file system I/O */
-// blkcnt_t st_blocks; /* number of 512B blocks allocated */
-// time_t st_atime; /* time of last access */
-// time_t st_mtime; /* time of last modification */
-// time_t st_ctime; /* time of last status change */ 
-// }
 
 // 응답을 해주는 함수
 void doit(int fd)
@@ -170,32 +153,6 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
   }
 }
 
-#ifdef original_static
-void serve_static(int fd, char *filename, int filesize)
-{
-  int srcfd;
-  char *srcp, filetype[MAXLINE], buf[MAXBUF];
-
-  /* Send response headers to client */
-  get_filetype(filename, filetype);
-  sprintf(buf, "HTTP/1.0 200 OK\r\n");
-  sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
-  sprintf(buf, "%sConnection: close\r\n", buf);
-  sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
-  sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
-  Rio_writen(fd, buf, strlen(buf));
-  printf("Response headers:\n");
-  printf("%s", buf);
-
-  /* Send response body to client */
-  srcfd = Open(filename, O_RDONLY, 0);
-  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-  Close(srcfd);
-  rio_writen(fd, srcp, filesize);
-  Munmap(srcp, filesize);
-}
-
-#else
 // HEAD method 처리를 위한 인자 추가
 void serve_static(int fd, char *filename, int filesize, char *method)
 {
@@ -226,7 +183,7 @@ void serve_static(int fd, char *filename, int filesize, char *method)
     free(srcp);
   }
 }
-#endif
+
   /* * get_filetype - Derive file type from filename*/
   void get_filetype(char *filename, char *filetype)
   {

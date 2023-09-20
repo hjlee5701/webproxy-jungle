@@ -153,32 +153,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
   }
 }
 
-#ifdef original_static
-void serve_static(int fd, char *filename, int filesize)
-{
-  int srcfd;
-  char *srcp, filetype[MAXLINE], buf[MAXBUF];
 
-  /* Send response headers to client */
-  get_filetype(filename, filetype);
-  sprintf(buf, "HTTP/1.0 200 OK\r\n");
-  sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
-  sprintf(buf, "%sConnection: close\r\n", buf);
-  sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
-  sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
-  Rio_writen(fd, buf, strlen(buf));
-  printf("Response headers:\n");
-  printf("%s", buf);
-
-  /* Send response body to client */
-  srcfd = Open(filename, O_RDONLY, 0);
-  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-  Close(srcfd);
-  rio_writen(fd, srcp, filesize);
-  Munmap(srcp, filesize);
-}
-
-#else
 // HEAD method 처리를 위한 인자 추가
 void serve_static(int fd, char *filename, int filesize, char *method)
 {
@@ -209,7 +184,7 @@ void serve_static(int fd, char *filename, int filesize, char *method)
     free(srcp);
   }
 }
-#endif
+
   /* * get_filetype - Derive file type from filename*/
   void get_filetype(char *filename, char *filetype)
   {
